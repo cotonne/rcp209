@@ -20,9 +20,6 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.preprocessing import StandardScaler, LabelEncoder, MinMaxScaler
 from sklearn import tree
 
-sns.set(style="whitegrid", color_codes=True)
-
-
 # Reading CSV
 filename = 'german.data.csv'
 delimiter = ' '
@@ -36,6 +33,8 @@ continuous_values = pd.read_csv(filename, delimiter=delimiter,
 
 values = continuous_values.columns.values
 
+
+sns.set(style="whitegrid", color_codes=True)
 # Decile
 print np.percentile(continuous_values, np.arange(0, 100, 10), axis=0)
 
@@ -110,10 +109,21 @@ plt.savefig("continuous3.png")
 # showed no interaction with the target.
 #  scores are better if greater, p-values are better if smaller (and losses are better if smaller)
 # Another general statement: scores are better if greater, p-values are better if smaller (and losses are better if smaller)
-cv = pd.DataFrame(MinMaxScaler().fit_transform(continuous_values), columns=continuous_values.columns)
-X = pd.concat([discrete_values.apply(LabelEncoder().fit_transform), cv], axis=1).as_matrix()
+values = continuous_values.columns.values
+# On discretise les variables continues en plusieurs groupes
+dummies = pd.DataFrame()
+dummies['Duration in month'] = pd.qcut(continuous_values['Duration in month'], 7, labels=False)
+dummies['Credit amount'] = pd.qcut(continuous_values['Credit amount'], 10, labels=False)
+dummies['Age'] = pd.qcut(continuous_values['Age'], 10, labels=False)
+
+data = pd.concat([discrete_values, dummies,
+  continuous_values['Present residence since'],
+  continuous_values['Installement rate'],
+  continuous_values['Number of existing credits'],
+  continuous_values['Nb of liable people']], axis=1)
+
 y = credit_values.as_matrix()
-## on garde les 11 meilleurs features
+
 chi2, pvalues  =  chi2_s(X, y)
 
 print "chi2"

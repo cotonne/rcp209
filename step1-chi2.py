@@ -20,6 +20,7 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.preprocessing import StandardScaler, LabelEncoder, MinMaxScaler
 from sklearn import tree
 
+# Reading CSV
 filename = 'german.data.csv'
 delimiter = ' '
 data = []
@@ -28,6 +29,9 @@ continuous_values = pd.read_csv(filename, delimiter=delimiter,
     names=['Duration in month', 'Credit amount', 'Installement rate', 'Present residence since', 'Age', 'Number of existing credits', 'Nb of liable people'],
     usecols=[1,4, 7, 10, 12, 15, 17],
     dtype='float')
+
+
+values = continuous_values.columns.values
 
 discrete_values = pd.read_csv(filename,delimiter=delimiter,
     names=['Status of checking account', 'Credit history', 
@@ -40,27 +44,36 @@ discrete_values = pd.read_csv(filename,delimiter=delimiter,
 credit_values = discrete_values['Credit']
 discrete_values = discrete_values.drop(labels='Credit', axis=1)
 
-dummies = pd.get_dummies(discrete_values.ix[:,:'Foreigner'], columns=['Status of checking account', 'Credit history', 
-         'Purpose', 'Savings account', 'Present employment since', 
-         'Personal status and sex', 'Guarantors', 'Property',
-         'Other installment plans', 'Housing', 
-         'Job', 'Telephone', 'Foreigner'], drop_first = True)
 
-pca = PCA(n_components=1)
-data = pd.concat([continuous_values, dummies], axis=1)
-minmax = MinMaxScaler()
-C = pca.fit_transform(minmax.fit_transform(data))
+##### X²
+# The p-value of a feature selection score indicates the probability 
+# that this score or a higher score would be obtained if this variable 
+# showed no interaction with the target.
+#  scores are better if greater, p-values are better if smaller (and losses are better if smaller)
+# Another general statement: scores are better if greater, p-values are better if smaller (and losses are better if smaller)
+values = continuous_values.columns.values
+# On discretise les variables continues en plusieurs groupes
+dummies = pd.DataFrame()
+dummies['Duration in month'] = pd.qcut(continuous_values['Duration in month'], 7, labels=False)
+dummies['Credit amount'] = pd.qcut(continuous_values['Credit amount'], 10, labels=False)
+dummies['Age'] = pd.qcut(continuous_values['Age'], 10, labels=False)
 
+X = pd.concat([discrete_values.apply(LabelEncoder().fit_transform), 
+  dummies,
+  continuous_values['Present residence since'],
+  continuous_values['Installement rate'],
+  continuous_values['Number of existing credits'],
+  continuous_values['Nb of liable people']], axis=1)
 
-cum_var_exp = np.cumsum(pca.explained_variance_ratio_)
-with plt.style.context('seaborn-whitegrid'):
-    plt.figure()
-    plt.bar(range(len(pca.explained_variance_ratio_)), pca.explained_variance_ratio_, alpha=0.5, align='center',
-            label='individual explained variance')
-    plt.step(range(len(pca.explained_variance_ratio_)), cum_var_exp, where='mid',
-             label='cumulative explained variance')
-    plt.ylabel('Explained variance ratio')
-    plt.xlabel('Principal components')
-    plt.legend(loc='best')
-    plt.tight_layout()
-    plt.show()
+y = credit_values.as_matrix()
+
+chi2, pvalues  =  chi2_s(X, y)
+
+print "chi2"
+print zip(X.columns, chi2)
+print "pvalues"
+print zip(X.columns, pvalues)
+
+#featureSelector = SelectKBest(score_func=chi2_s, k=11)
+#featureSelector.fit_transform(X, y)
+
