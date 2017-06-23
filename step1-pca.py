@@ -46,10 +46,11 @@ dummies = pd.get_dummies(discrete_values.ix[:,:'Foreigner'], columns=['Status of
          'Other installment plans', 'Housing', 
          'Job', 'Telephone', 'Foreigner'], drop_first = True)
 
-pca = PCA(n_components=1)
 data = pd.concat([continuous_values, dummies], axis=1)
 minmax = MinMaxScaler()
-C = pca.fit_transform(minmax.fit_transform(data))
+transformedData = minmax.fit_transform(data)
+pca = PCA(n_components=1)
+C = pca.fit_transform(transformedData)
 
 
 cum_var_exp = np.cumsum(pca.explained_variance_ratio_)
