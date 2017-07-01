@@ -73,12 +73,17 @@ discrete_values = pd.read_csv(filename,delimiter=delimiter,
 credit_values = discrete_values['Credit']
 discrete_values = discrete_values.drop(labels='Credit', axis=1)
 
+#####################################
 # Reprojection
+#####################################
 data = pd.concat([discrete_values.apply(LabelEncoder().fit_transform), continuous_values], axis=1)
 X = data.as_matrix()
 y = credit_values.as_matrix()
 X_scaled = preprocessing.MinMaxScaler().fit_transform(X)
 
+#####################################
+## t-SNE sur deux composantes
+#####################################
 tsne = TSNE(n_components=2, random_state=0, init='pca', 
     perplexity=50, verbose=2, n_iter=2000, n_iter_without_progress=100,
     learning_rate=500)
@@ -93,7 +98,9 @@ plt.scatter(x2d[:,0], x2d[:,1], c=labels, s=7, edgecolors='none', alpha=1.0)
 
 plt.show()
 
-
+#####################################
+## t-SNE sur trois composantes
+#####################################
 tsne = TSNE(n_components=3, random_state=0, init='pca', 
     perplexity=30, verbose=2, n_iter=2000, n_iter_without_progress=100,
     learning_rate=500)

@@ -94,40 +94,10 @@ for index in range(0, len(values)):
 
 plt.savefig("continuous2.png")
 
-#f, axarr = plt.subplots(6, 5, figsize=(10, 10))
-#for index in range(0, len(values)):
-#  print 'Reading ' + values[index]
-#  datax = discrete_values[values[index]]
-#  pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
-#        shadow=True, startangle=90, ax=axarr[index/5, index % 5])
-#plt.savefig("continuous3.png")
 
-
-###############################################################
-## AFCM
-values = continuous_values.columns.values
-
-dummies = pd.DataFrame()
-dummies['Duration in month'] = pd.qcut(continuous_values['Duration in month'], 7, labels=False)
-dummies['Credit amount'] = pd.qcut(continuous_values['Credit amount'], 10, labels=False)
-dummies['Age'] = pd.qcut(continuous_values['Age'], 10, labels=False)
-
-data = pd.concat([discrete_values.apply(LabelEncoder().fit_transform), dummies,
-  continuous_values['Present residence since'],
-  continuous_values['Installement rate'],
-  continuous_values['Number of existing credits'],
-  continuous_values['Nb of liable people']], axis=1)
-
-
-fa = FactorAnalysis()
-X = data.as_matrix()
-y = credit_values.as_matrix()
-X_transformed = fa.fit_transform(X, y)
-
-
-######################## 
-## correlation
-
+#####################################
+## Matrice des correlations
+#####################################
 continuous_values = pd.read_csv(filename, delimiter=delimiter, 
     names=['Duration in month'],
     usecols=[1],
@@ -148,11 +118,12 @@ dummies = pd.get_dummies(discrete_values.ix[:,:'Foreigner'], columns=discrete_va
 
 data = pd.concat([continuous_values, dummies], axis=1)
 
-
 covariance_matrix = np.corrcoef(data.transpose())
 
-### Correlations
-plt.figure(figsize=(8, 6), dpi=80)
+#####################################
+### Generation de la matrice des correlations sous forme de heatmap
+#####################################
+plt.figure(figsize=(16, 16), dpi=80)
 df = data.corr()
 labels = df.where(np.triu(np.ones(df.shape)).astype(np.bool))
 labels = labels.round(2)
@@ -165,37 +136,3 @@ ax.set_xticks([])
 ax.set_yticks([])
 plt.savefig("correlation.png")
 plt.matshow(covariance_matrix, cmap=plt.cm.gray)
-
-
-##g = sns.PairGrid(data)
-#g.map_diag(sns.kdeplot)
-#g.map_offdiag(sns.kdeplot, cmap="Blues_d", n_levels=6);
-
-
-#sns.pairplot(data);
-
-
-# Minimum percentage of variance we want to be described by the resulting transformed components
-variance_pct = .99
-
-# Create PCA object
-pca = PCA(n_components=variance_pct)
-
-# Transform the initial features
-X_transformed = pca.fit_transform(X,y)
-
-plt.plot(pca.explained_variance_ratio_)
-print(pca.explained_variance_ratio_)
-
-# Create a data frame from the PCA'd data
-pcaDataFrame = pd.DataFrame(X_transformed)
-
-print pcaDataFrame.shape[1], " components describe ", str(variance_pct)[1:], "% of the variance"
-
-plt.figure()
-cm = np.array(['r','g', 'b'])
-# Full color : set used for training
-plt.scatter(X_train1[:,0],X_train1[:,1],c=cm[y_train1],s=50,edgecolors='none')
-
-
-plt.show()
