@@ -94,14 +94,13 @@ for index in range(0, len(values)):
 
 plt.savefig("continuous2.png")
 
-f, axarr = plt.subplots(6, 5, figsize=(10, 10))
-for index in range(0, len(values)):
-  print 'Reading ' + values[index]
-  datax = discrete_values[values[index]]
-  pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
-        shadow=True, startangle=90, ax=axarr[index/5, index % 5])
-
-plt.savefig("continuous3.png")
+#f, axarr = plt.subplots(6, 5, figsize=(10, 10))
+#for index in range(0, len(values)):
+#  print 'Reading ' + values[index]
+#  datax = discrete_values[values[index]]
+#  pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
+#        shadow=True, startangle=90, ax=axarr[index/5, index % 5])
+#plt.savefig("continuous3.png")
 
 
 ###############################################################
@@ -128,12 +127,23 @@ X_transformed = fa.fit_transform(X, y)
 
 ######################## 
 ## correlation
-dummies = pd.get_dummies(discrete_values.ix[:,:'Foreigner'], columns=['Status of checking account', 'Credit history', 
-         'Purpose', 'Savings account', 'Present employment since', 
-         'Personal status and sex', 'Guarantors', 'Property',
-         'Other installment plans', 'Housing', 
-         'Job', 'Telephone', 'Foreigner'], drop_first = True)
 
+continuous_values = pd.read_csv(filename, delimiter=delimiter, 
+    names=['Duration in month'],
+    usecols=[1],
+    dtype='float')
+
+discrete_values = pd.read_csv(filename,delimiter=delimiter,
+    names=['Status of checking account', 'Credit history', 
+         'Savings account', 'Present employment since', 
+         'Property', 'Foreigner', 'Credit'],
+    usecols=[0,2,5,6,11,19,20],
+    dtype='S4')
+
+credit_values = discrete_values['Credit']
+discrete_values = discrete_values.drop(labels='Credit', axis=1)
+
+dummies = pd.get_dummies(discrete_values.ix[:,:'Foreigner'], columns=discrete_values.columns.values, drop_first = True)
 
 
 data = pd.concat([continuous_values, dummies], axis=1)
@@ -142,14 +152,14 @@ data = pd.concat([continuous_values, dummies], axis=1)
 covariance_matrix = np.corrcoef(data.transpose())
 
 ### Correlations
+plt.figure(figsize=(8, 6), dpi=80)
 df = data.corr()
 labels = df.where(np.triu(np.ones(df.shape)).astype(np.bool))
 labels = labels.round(2)
 labels = labels.replace(np.nan,' ', regex=True)
-
 mask = np.triu(np.ones(df.shape)).astype(np.bool)
 ax = sns.heatmap(df, mask=mask, cmap='RdYlGn_r', fmt='', square=True, linewidths=1.5)
-mask = np.ones((48, 48))-mask
+mask = np.ones((20, 20))-mask
 ax = sns.heatmap(df, mask=mask, cmap=ListedColormap(['white']),annot=labels,cbar=False, fmt='', linewidths=1.5)
 ax.set_xticks([])
 ax.set_yticks([])
@@ -182,7 +192,7 @@ pcaDataFrame = pd.DataFrame(X_transformed)
 
 print pcaDataFrame.shape[1], " components describe ", str(variance_pct)[1:], "% of the variance"
 
-plt.fig()
+plt.figure()
 cm = np.array(['r','g', 'b'])
 # Full color : set used for training
 plt.scatter(X_train1[:,0],X_train1[:,1],c=cm[y_train1],s=50,edgecolors='none')

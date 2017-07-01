@@ -47,10 +47,10 @@ dummies = pd.get_dummies(discrete_values.ix[:,:'Foreigner'], columns=['Status of
          'Job', 'Telephone', 'Foreigner'], drop_first = True)
 
 data = pd.concat([continuous_values, dummies], axis=1)
-minmax = MinMaxScaler()
+minmax = StandardScaler()
 transformedData = minmax.fit_transform(data)
-pca = PCA(n_components=1)
-C = pca.fit_transform(transformedData)
+pca = PCA()
+x2d = pca.fit_transform(transformedData)
 
 
 cum_var_exp = np.cumsum(pca.explained_variance_ratio_)
@@ -65,3 +65,11 @@ with plt.style.context('seaborn-whitegrid'):
     plt.legend(loc='best')
     plt.tight_layout()
     plt.show()
+
+pca = PCA(n_components=2)
+x2d = pca.fit_transform(transformedData)
+labels = map(lambda v: 'r' if v == '1' else 'b', y)
+plt.figure()
+plt.scatter(x2d[:,0], x2d[:,1], c=labels, s=7, edgecolors='none', alpha=1.0)
+
+plt.show()
